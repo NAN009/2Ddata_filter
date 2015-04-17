@@ -39,5 +39,5 @@ public:
 	}
 	void Load(std::string filename, double threshold = 0);
 	void GaussianFilter(int radius, double sigma, double ratio);
-
+	void dataFilter();
 };

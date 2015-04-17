@@ -48,7 +48,9 @@ void VTK::GaussianFilter(int radius, double sigma, double ratio)
 {
 	int i, j, x, y;
 	const int diameter = 7;
-	cout << data[499] << " " << data[500] << " " << data[501] << " " << data[502] << " " << data[503] << endl;
+	cout << data[0] << " " << data[1] << " " << data[10] << endl;
+	cout << data[2150] << " " << data[2151] << " " << data[2152] << " " << data[2153] << " " << data[2154] << endl;
+	cout << data[2364] << " " << data[2365] << " " << data[2366] << " " << data[2367] << " " << data[2368] << endl;
 	int *ix, *iy;
 	double *fileter, temVal, *temData;
 
@@ -103,11 +105,53 @@ void VTK::GaussianFilter(int radius, double sigma, double ratio)
 	}
 	delete[] data;
 	data = temData;
-	cout << data[499] << " " << data[500] << " " << data[501] << " " << data[502] << " " << data[503] << endl;
+	cout << data[0] <<" "<<data[1]<<" "<<data[10]<< endl;
+	cout << data[2150] << " " << data[2151] << " " << data[2152] << " " << data[2153] << " " << data[2154] << endl;
+	cout << data[2364] << " " << data[2365] << " " << data[2366] << " " << data[2367] << " " << data[2368] << endl;
 	delete[] iy;
 	delete[] ix;
 	delete[] fileter;
 	cout << "data points are smoothened by Gaussian filter" << endl;
+}
+
+void VTK::dataFilter()
+{
+	ofstream value("D:\\1data\\iran_dataFilter.txt");
+	double *temData;
+	temData = new double[dimX*dimY];
+	double lacalPoint1, loaclPoint2;
+
+	
+
+	for (int i = 0; i < dimY; ++i)
+	{
+		for (int j = 0; j < dimX; ++j)
+		{
+			if (i<1 || i>=dimX - 1 || j<1 || j>=dimY - 1)
+				temData[j + i*dimX] = DATA(j,i);
+			else
+			{
+				lacalPoint1 = 3 * DATA(j, i)/2 ;
+
+				loaclPoint2 = DATA(j + 1, i);
+				loaclPoint2 += DATA(j - 1, i);
+
+				
+				loaclPoint2 += DATA(j, i + 1);
+				loaclPoint2 += DATA(j, i - 1);
+				
+			
+
+
+				temData[j + i*dimX] = lacalPoint1 - 1 * loaclPoint2 / 8;
+			}
+			
+			value << temData[j + i*dimX] << " ";
+		}
+		value << endl;
+	}
+	delete[] data;
+	data = temData;
 }
 
 #undef DATA
