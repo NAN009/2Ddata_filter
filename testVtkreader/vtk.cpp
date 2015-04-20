@@ -2,7 +2,7 @@
 #include "vtk.h"
 #include <iostream>
 #include <fstream>
-
+#include <iomanip>
 using namespace std;
 #define DATA(x,y) (data[(x)+dimX*(y)])
 
@@ -47,7 +47,7 @@ void VTK::Load(std::string filename, double threshold)
 void VTK::GaussianFilter(int radius, double sigma, double ratio)
 {
 	int i, j, x, y;
-	const int diameter = 7;
+	const int diameter =61;
 	cout << data[0] << " " << data[1] << " " << data[10] << endl;
 	cout << data[2150] << " " << data[2151] << " " << data[2152] << " " << data[2153] << " " << data[2154] << endl;
 	cout << data[2364] << " " << data[2365] << " " << data[2366] << " " << data[2367] << " " << data[2368] << endl;
@@ -85,7 +85,17 @@ void VTK::GaussianFilter(int radius, double sigma, double ratio)
 		for (j = 0; j < diameter; ++j)
 			temVal += fileter[j + diameter*i];
 	}
-	ofstream value("D:\\2Ddata\\2d_filter.txt");
+	ofstream value("D:\\2Ddata\\2d_filter.vtk");
+	value << "#vtk DataFile Version 3.0" << endl;
+	value << "Created by ZhangNan!" << endl;
+	value << "ASCII" << endl;
+	value << "DATASET STRUCTURED_POINTS" << endl;
+	value << "DIMENSIONS "<<dimX<<" "<<dimY << endl;
+	value << "ORIGIN -3 -3 0" << endl;
+	value << "SPACING 1 1 1" << endl;
+	value << "POINT_DATA " <<dimX*dimY<< endl;
+	value << "SCALARS image_data double" << endl;
+	value << "LOOKUP_TABLE default" << endl;
 	fileter[radius + diameter*radius] = 1.0 - temVal;
 	temData = new double[dimX*dimY];
 	for (y = 0; y < dimY; ++y)
@@ -99,13 +109,14 @@ void VTK::GaussianFilter(int radius, double sigma, double ratio)
 					temVal += fileter[j + diameter*i] * DATA(ix[x+j],iy[y+i]);
 			}
 			temData[x + dimX*y] = temVal;
-			value << temVal << " ";
+			value << setiosflags(ios::fixed) << setprecision(16) << temVal << " ";
+
 		}
 		value << endl;
 	}
 	delete[] data;
 	data = temData;
-	cout << data[0] <<" "<<data[1]<<" "<<data[10]<< endl;
+	cout << setiosflags(ios::fixed) << setprecision(16) << data[0] << " " << data[1] << " " << data[10] << endl;
 	cout << data[2150] << " " << data[2151] << " " << data[2152] << " " << data[2153] << " " << data[2154] << endl;
 	cout << data[2364] << " " << data[2365] << " " << data[2366] << " " << data[2367] << " " << data[2368] << endl;
 	delete[] iy;
@@ -116,13 +127,22 @@ void VTK::GaussianFilter(int radius, double sigma, double ratio)
 
 void VTK::dataFilter()
 {
-	ofstream value("D:\\1data\\iran_dataFilter.txt");
+	ofstream value("D:\\2Ddata\\2d_dataFilter.vtk");
+	value << "#vtk DataFile Version 3.0" << endl;
+	value << "Created by ZhangNan!" << endl;
+	value << "ASCII" << endl;
+	value << "DATASET STRUCTURED_POINTS" << endl;
+	value << "DIMENSIONS " << dimX << " " << dimY << endl;
+	value << "ORIGIN -3 -3 0" << endl;
+	value << "SPACING 1 1 1" << endl;
+	value << "POINT_DATA " << dimX*dimY << endl;
+	value << "SCALARS image_data double" << endl;
+	value << "LOOKUP_TABLE default" << endl;
+
 	double *temData;
 	temData = new double[dimX*dimY];
 	double lacalPoint1, loaclPoint2;
-
-	
-
+	int a = 1.773922337607435, b = -1.616429630103949;
 	for (int i = 0; i < dimY; ++i)
 	{
 		for (int j = 0; j < dimX; ++j)
@@ -131,22 +151,10 @@ void VTK::dataFilter()
 				temData[j + i*dimX] = DATA(j,i);
 			else
 			{
-				lacalPoint1 = 3 * DATA(j, i)/2 ;
-
-				loaclPoint2 = DATA(j + 1, i);
-				loaclPoint2 += DATA(j - 1, i);
-
-				
-				loaclPoint2 += DATA(j, i + 1);
-				loaclPoint2 += DATA(j, i - 1);
-				
-			
-
-
-				temData[j + i*dimX] = lacalPoint1 - 1 * loaclPoint2 / 8;
+				temData[j + i*dimX] = a*DATA(j, i) - b*(DATA(j + 1, i) + DATA(j - 1, i) + DATA(j, i + 1) + DATA(j, i - 1) - 4 * DATA(j, i));
 			}
 			
-			value << temData[j + i*dimX] << " ";
+			value << setiosflags(ios::fixed) << setprecision(16) << temData[j + i*dimX] << " ";
 		}
 		value << endl;
 	}
@@ -154,5 +162,46 @@ void VTK::dataFilter()
 	data = temData;
 }
 
+void VTK::FourierValue2D(double w1,double w2)
+{
+	ofstream value("D:\\2Ddata\\2d_FourierFilter.vtk");
+	value << "#vtk DataFile Version 3.0" << endl;
+	value << "Created by ZhangNan!" << endl;
+	value << "ASCII" << endl;
+	value << "DATASET STRUCTURED_POINTS" << endl;
+	value << "DIMENSIONS " << dimX << " " << dimY << endl;
+	value << "ORIGIN -3 -3 0" << endl;
+	value << "SPACING 1 1 1" << endl;
+	value << "POINT_DATA " << dimX*dimY << endl;
+	value << "SCALARS image_data double" << endl;
+	value << "LOOKUP_TABLE default" << endl;
+
+	double value1 = 0,value2=0;
+	double *cosW1 = new double[dimX];
+	double *sinW1 = new double[dimX];
+	double *cosW2 = new double[dimY];
+	double *sinW2 = new double[dimY];
+	for (int i = 0; i < dimX; ++i)
+	{
+		sinW1[i] = sin(i*w1);
+		cosW1[i] = cos(i*w1);
+	}
+	for (int i = 0; i < dimY; ++i)
+	{
+		sinW2[i] = sin(i*w2);
+		cosW2[i] = cos(i*w2);
+	}
+	for (int i = 0; i < dimX; ++i)
+	{
+		for (int j = 0; j < dimY; ++j)
+		{
+			double value1 = 0, value2 = 0;
+			value1 += DATA(i, j)*(cosW1[i] * cosW2[j] - sinW1[i] * sinW2[j]);
+			value2 += DATA(i, j)*(sinW1[i] * cosW2[j] - cosW1[i] * sinW2[j]);
+			value << setiosflags(ios::fixed) << setprecision(16) << abs(value1 - value2) << " ";
+		}
+		value << endl;
+	}
+}
 #undef DATA
-#undef INDEX    
+

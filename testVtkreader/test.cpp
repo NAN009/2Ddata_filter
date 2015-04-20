@@ -5,15 +5,22 @@
  vtkReader vr;
  void test2d()
  {
-	 std::string path = "D:/1data/iran.vtk";
+	 std::string path = "D:/2Ddata/2d.vtk";
+	 vtk.Load(path, 0);
+
+	 vtk.GaussianFilter(30,0.5,0.01);
+ }
+ void testVr()
+ {
+	 std::string path = "D:/2Ddata/2d.vtk";
 	 vtk.Load(path, 0);
 
 	 vtk.dataFilter();
  }
- void testVr()
+ void testFourier()
  {
-	 vr.loadFile("D:\\2Ddata\\2d.vtk");
-	
+	 std::string path = "D:/2Ddata/2d.vtk";
+	 vtk.Load(path, 0);
 
-	 vtk.GaussianFilter(3, 0.5, 0.05);
+	 vtk.FourierValue2D(3.1415926, 3.1415926);
  }
