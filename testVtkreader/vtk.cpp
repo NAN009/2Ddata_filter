@@ -47,7 +47,7 @@ void VTK::Load(std::string filename, double threshold)
 void VTK::GaussianFilter(int radius, double sigma, double ratio)
 {
 	int i, j, x, y;
-	const int diameter =61;
+	const int diameter =11;
 	cout << data[0] << " " << data[1] << " " << data[10] << endl;
 	cout << data[2150] << " " << data[2151] << " " << data[2152] << " " << data[2153] << " " << data[2154] << endl;
 	cout << data[2364] << " " << data[2365] << " " << data[2366] << " " << data[2367] << " " << data[2368] << endl;
@@ -85,7 +85,7 @@ void VTK::GaussianFilter(int radius, double sigma, double ratio)
 		for (j = 0; j < diameter; ++j)
 			temVal += fileter[j + diameter*i];
 	}
-	ofstream value("D:\\2Ddata\\2d_filter.vtk");
+	ofstream value("D:\\newData\\taiwan_2\\taiwan_2_gray_filter.nak");
 	value << "#vtk DataFile Version 3.0" << endl;
 	value << "Created by ZhangNan!" << endl;
 	value << "ASCII" << endl;
@@ -132,34 +132,70 @@ void VTK::dataFilter()
 	value << "Created by ZhangNan!" << endl;
 	value << "ASCII" << endl;
 	value << "DATASET STRUCTURED_POINTS" << endl;
-	value << "DIMENSIONS " << dimX << " " << dimY << endl;
+	value << "DIMENSIONS " << 4*dimX-3 << " " << 4*dimY-3<< endl;
 	value << "ORIGIN -3 -3 0" << endl;
 	value << "SPACING 1 1 1" << endl;
-	value << "POINT_DATA " << dimX*dimY << endl;
+	value << "POINT_DATA " << (4 * dimX - 3) * 4 * dimY - 3 << endl;
 	value << "SCALARS image_data double" << endl;
 	value << "LOOKUP_TABLE default" << endl;
-
-	double *temData;
-	temData = new double[dimX*dimY];
+	vector <vector< double > > temData(dimY*4-3);
+	for (int i = 0; i < dimY * 4 -3; ++i)
+		temData[i].resize(dimX * 4 -3);
+	//double **temData = new double[(dimY - 1) * 4 + 1][(dimX - 1) * 4 + 1];
 	double lacalPoint1, loaclPoint2;
-	int a = 1.773922337607435, b = -1.616429630103949;
-	for (int i = 0; i < dimY; ++i)
+	int i, j, j1, i1;
+	for (i = 0; i < dimY-1; ++i)
 	{
-		for (int j = 0; j < dimX; ++j)
+		for (j = 0; j < dimX-1; ++j)
 		{
-			if (i<1 || i>=dimX - 1 || j<1 || j>=dimY - 1)
-				temData[j + i*dimX] = DATA(j,i);
-			else
-			{
-				temData[j + i*dimX] = a*DATA(j, i) - b*(DATA(j + 1, i) + DATA(j - 1, i) + DATA(j, i + 1) + DATA(j, i - 1) - 4 * DATA(j, i));
-			}
 			
-			value << setiosflags(ios::fixed) << setprecision(16) << temData[j + i*dimX] << " ";
+			temData[i*4][j*4] = DATA(j, i);
+			temData[i*4][j*4+1] = DATA(j, i) * 3 / 4 + DATA(j+1, i) * 1 / 4;
+			temData[i*4][j*4+2] = DATA(j, i) * 1 / 2 + DATA(j+1, i) * 1 / 2;
+			temData[i*4][j*4+3] = DATA(j, i) * 1 / 4 + DATA(j+1, i) * 3 / 4;
+			
+			temData[i*4+1][j*4] = DATA(j, i) * 3 / 4 + DATA(j , i+1) * 1 / 4;
+			temData[i*4 + 1][j*4 + 1] = temData[i*4 + 1][j*4] * 3 / 4 + (DATA(j + 1, i) * 3 / 4 + DATA(j + 1, i+1) * 1 / 4) * 1 / 4;
+			temData[i*4 + 1][j*4 + 2] = temData[i*4 + 1][j*4] * 1 / 2 + (DATA(j + 1, i) * 3 / 4 + DATA(j + 1, i + 1) * 1 / 4) * 1 / 2;
+			temData[i*4 + 1][j*4 + 3] = temData[i*4 + 1][j*4] * 1 / 4 + (DATA(j + 1, i) * 3 / 4 + DATA(j + 1, i + 1) * 1 / 4) * 3 / 4;
+			
+			temData[i*4 + 2][j*4] = DATA(j, i) * 1 / 2 + DATA(j, i + 1) * 1 / 2;
+			temData[i*4 + 2][j*4 + 1] = temData[i*4 + 2][j*4] * 3 / 4 + (DATA(j + 1, i) * 1 / 2 + DATA(j + 1, i + 1) * 1 / 2) * 1 / 4;
+			temData[i*4 + 2][j*4 + 2] = temData[i*4 + 2][j*4] * 1 / 2 + (DATA(j + 1, i) * 1 / 2 + DATA(j + 1, i + 1) * 1 / 2) * 1 / 2;
+			temData[i*4 + 2][j*4 + 3] = temData[i*4 + 2][j*4] * 1 / 4 + (DATA(j + 1, i) * 1 / 2 + DATA(j + 1, i + 1) * 1 / 2) * 3 / 4;
+
+			temData[i*4 + 3][j*4] = DATA(j, i) * 1 / 4 + DATA(j, i + 1) * 3 / 4;
+			temData[i*4 + 3][j*4 + 1] = temData[i*4 + 3][j*4] * 3 / 4 + (DATA(j + 1, i) * 1 / 4 + DATA(j + 1, i + 1) * 3 / 4) * 1 / 4;
+			temData[i*4 + 3][j*4 + 2] = temData[i*4 + 3][j*4] * 1 / 2 + (DATA(j + 1, i) * 1 / 4 + DATA(j + 1, i + 1) * 3 / 4) * 1 / 2;
+			temData[i*4 + 3][j*4 + 3] = temData[i*4 + 3][j*4] * 1 / 4 + (DATA(j + 1, i) * 1 / 4 + DATA(j + 1, i + 1) * 3 / 4) * 3 / 4;
+
+
+		}
+		if (j == dimX - 1)
+		{
+			temData[i * 4][j * 4] = DATA(j, i);
+			temData[i * 4 + 1][j * 4] = DATA(j, i) * 3 / 4 + DATA(j, i + 1) * 1 / 4;
+			temData[i * 4 + 2][j * 4] = DATA(j, i) * 1 / 2 + DATA(j, i + 1) * 1 / 2;
+			temData[i * 4 + 3][j * 4] = DATA(j, i) * 1 / 4 + DATA(j, i + 1) * 3 / 4;
+		}	
+	}
+	for (int i = 0; i < dimX-1; ++i)
+	{
+		temData[4 * (dimY - 1)][i * 4] = DATA(i, dimY - 1);
+		temData[4 * (dimY - 1)][i * 4 + 1] = DATA(i, dimY - 1) * 3 / 4 + DATA(i+1, dimY - 1) * 1 / 4;
+		temData[4 * (dimY - 1)][i * 4 + 2] = DATA(i, dimY - 1) * 1 / 2+ DATA(i + 1, dimY - 1) * 1 / 2;
+		temData[4 * (dimY - 1)][i * 4 + 3] = DATA(i, dimY - 1) * 1 / 4 + DATA(i + 1, dimY - 1) * 3 / 4;
+	}
+	temData[4 * (dimY - 1)][4 * (dimX - 1)] = DATA(dimX-1,dimY-1);
+	for (int i = 0; i < dimY*4-3 ; ++i)
+	{
+		for (int j = 0; j < dimX*4-3 ; ++j)
+		{
+			value << setiosflags(ios::fixed) << setprecision(9) << temData[i][j] << " ";
 		}
 		value << endl;
 	}
-	delete[] data;
-	data = temData;
+	
 }
 
 void VTK::FourierValue2D(double w1,double w2)
@@ -198,7 +234,7 @@ void VTK::FourierValue2D(double w1,double w2)
 			double value1 = 0, value2 = 0;
 			value1 += DATA(i, j)*(cosW1[i] * cosW2[j] - sinW1[i] * sinW2[j]);
 			value2 += DATA(i, j)*(sinW1[i] * cosW2[j] - cosW1[i] * sinW2[j]);
-			value << setiosflags(ios::fixed) << setprecision(16) << abs(value1 - value2) << " ";
+			value << setiosflags(ios::fixed) << setprecision(16) << abs(value1 + value2) << " ";
 		}
 		value << endl;
 	}

@@ -5,7 +5,7 @@ using namespace std;
 int main()
 {
 	
-	testFourier();
+	test2d();
 	system("pause");
 	return 0;
 }
