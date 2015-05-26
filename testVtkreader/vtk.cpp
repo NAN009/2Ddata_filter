@@ -44,10 +44,99 @@ void VTK::Load(std::string filename, double threshold)
 
 
 }
+void VTK::GaussianFilter3D(int radius, double sigma, double ratio)
+{
+	int i, j, k, x, y, z, diameter = 2 * radius + 1;
+	int *ix, *iy, *iz;
+	double *filter, tempvalue, *tempdata;
+	int dimZ = 1;
+	filter = new double[diameter*diameter*diameter];
+	ix = new int[dimX + 2 * radius];
+	iy = new int[dimY + 2 * radius];
+	iz = new int[dimZ + 2 * radius];
+	for (i = 0; i < radius; ++i) {
+		ix[i] = iy[i] = iz[i] = 0;
+		ix[dimX + radius + i] = dimX - 1;
+		iy[dimY + radius + i] = dimY - 1;
+		iz[dimZ + radius + i] = dimZ - 1;
+	}
+	ofstream value("D:\\newData\\taiwan_2\\taiwan_2_double3D_10_filter_50.nak");
+	value << "#vtk DataFile Version 3.0" << endl;
+	value << "Created by ZhangNan!" << endl;
+	value << "ASCII" << endl;
+	value << "DATASET STRUCTURED_POINTS" << endl;
+	value << "DIMENSIONS " << dimX << " " << dimY << endl;
+	value << "ORIGIN -3 -3 0" << endl;
+	value << "SPACING 1 1 1" << endl;
+	value << "POINT_DATA " << dimX*dimY << endl;
+	value << "SCALARS image_data double" << endl;
+	value << "LOOKUP_TABLE default" << endl;
+	for (i = 0; i < dimX; ++i)
+		ix[i + radius] = i;
+	for (i = 0; i < dimY; ++i)
+		iy[i + radius] = i;
+	for (i = 0; i < dimZ; ++i)
+		iz[i + radius] = i;
+	// set the filter
+	for (i = 0; i <= radius; ++i) {
+		for (j = 0; j <= radius; ++j) {
+			for (k = 0; k <= radius; ++k) {
+				tempvalue = sqrt(i*i + j*j + k*k);
+				tempvalue = ratio * sqrt(exp(-0.5*(tempvalue / sigma)*(tempvalue / sigma)));
+				filter[(radius - k) + diameter*(radius - j + diameter*(radius - i))] = tempvalue;
+				filter[(radius - k) + diameter*(radius - j + diameter*(radius + i))] = tempvalue;
+				filter[(radius - k) + diameter*(radius + j + diameter*(radius - i))] = tempvalue;
+				filter[(radius - k) + diameter*(radius + j + diameter*(radius + i))] = tempvalue;
+				filter[(radius + k) + diameter*(radius - j + diameter*(radius - i))] = tempvalue;
+				filter[(radius + k) + diameter*(radius - j + diameter*(radius + i))] = tempvalue;
+				filter[(radius + k) + diameter*(radius + j + diameter*(radius - i))] = tempvalue;
+				filter[(radius + k) + diameter*(radius + j + diameter*(radius + i))] = tempvalue;
+			}
+		}
+	}
+	tempvalue = -filter[radius + diameter*(radius + diameter*radius)];
+	for (i = 0; i < diameter; ++i) {
+		for (j = 0; j < diameter; ++j) {
+			for (k = 0; k < diameter; ++k) {
+				tempvalue += filter[k + diameter*(j + diameter*i)];
+			}
+		}
+	}
+	filter[radius + diameter*(radius + diameter*radius)] = 1.0 - tempvalue;
+	// convolve
+	tempdata = new double[dimX*dimY*dimZ];
+	for (z = 0; z < dimZ; z++) {
+		for (y = 0; y < dimY; y++) {
+			for (x = 0; x < dimX; x++) {
+				tempvalue = 0;
+				for (i = 0; i < diameter; ++i) {
+					for (j = 0; j < diameter; ++j) {
+						for (k = 0; k < diameter; ++k) {
+							tempvalue += filter[k + diameter*(j + diameter*i)] * DATA(ix[x + k], iy[y + j], iz[z + i]);
+						}
+					}
+				}
+				tempdata[x + dimX*(y + dimY*z)] = tempvalue;
+				value << setiosflags(ios::fixed) << setprecision(16) << tempvalue << " ";
+			}
+			value << endl;
+		}
+		value << endl;
+	}
+	delete[] data;
+	data = tempdata;
+
+	delete[] iz;
+	delete[] iy;
+	delete[] ix;
+	delete[] filter;
+	printf("data points are smoothened by Gaussian filter\n");
+	return;
+}
 void VTK::GaussianFilter(int radius, double sigma, double ratio)
 {
 	int i, j, x, y;
-	const int diameter =11;
+	const int diameter =2*radius+1;
 	cout << data[0] << " " << data[1] << " " << data[10] << endl;
 	cout << data[2150] << " " << data[2151] << " " << data[2152] << " " << data[2153] << " " << data[2154] << endl;
 	cout << data[2364] << " " << data[2365] << " " << data[2366] << " " << data[2367] << " " << data[2368] << endl;
@@ -85,7 +174,7 @@ void VTK::GaussianFilter(int radius, double sigma, double ratio)
 		for (j = 0; j < diameter; ++j)
 			temVal += fileter[j + diameter*i];
 	}
-	ofstream value("D:\\newData\\taiwan_2\\taiwan_2_gray_filter.nak");
+	ofstream value("D:\\newData\\taiwan_2\\taiwan_2_double_10_filter_50.nak");
 	value << "#vtk DataFile Version 3.0" << endl;
 	value << "Created by ZhangNan!" << endl;
 	value << "ASCII" << endl;

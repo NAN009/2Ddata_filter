@@ -5,10 +5,10 @@
  vtkReader vr;
  void test2d()
  {
-	 std::string path = "D:/newData/taiwan_2/taiwan_2_gray.nak";
+	 std::string path = "D:/newData/taiwan_2/taiwan_2_double.nak";
 	 vtk.Load(path, 0);
 
-	 vtk.GaussianFilter(5,0.5,0.01);
+	 vtk.GaussianFilter3D(3,0.5,0.01);
  }
  void testVr()
  {
